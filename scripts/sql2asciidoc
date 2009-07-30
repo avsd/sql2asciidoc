@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+from sql2asciidoc import oracle2asciidoc
+import sys
+
+if __name__=="__main__":
+    oracle2asciidoc.main(sys.argv)

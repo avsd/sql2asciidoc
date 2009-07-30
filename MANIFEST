@@ -1,0 +1,9 @@
+LICENSE
+setup.py
+scripts/ddl2asciidoc
+scripts/sql2asciidoc
+sql2asciidoc/__init__.py
+sql2asciidoc/asciidoc.py
+sql2asciidoc/db.py
+sql2asciidoc/oracle2asciidoc.py
+sql2asciidoc/script_tools.py
