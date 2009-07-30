@@ -10,7 +10,8 @@ __all__ = ['TOP_COMMENT', 'TABLE_SEP', 'sql_to_asciidoc', 'main_sql2asciidoc']
 
 from db import *
 import asciidoc
-import getopt, os, re 
+import getopt, os, re
+import sys
 
 TOP_COMMENT = \
 r"""// ''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -284,12 +285,16 @@ def main(argv):
             Default: ~
         -o, --output=FILENAME
             Output file. By default - sql_filename with
-            txt extension. If "-" is specified as FILENAME,
+            asciidoc extension. If "-" is specified as FILENAME,
             output is written to stdout.
         -m, --comments
             Generate SQL comments rather than asciidoc output
         -v, --verbose
             Write detailed information to stderr.
+    Note:
+        If sql_filename is not specified, SQL is expected from
+        stdin. In this case output goes to stdout as well,
+        unless -o parameter is specified.
     """
 
     def log_error(s):
@@ -316,8 +321,8 @@ def main(argv):
              "view-table-attributes=", "view-header=", "view-row-pattern=",
              "output=", "verbose", "comments"])
 
-        infile = args[0]
-        outfile = "%s.txt" % os.path.splitext(os.path.split(infile)[1])[0]
+        infile = args and args[0] or None
+        outfile = infile and "%s.asciidoc" % os.path.splitext(os.path.split(infile)[1])[0] or '-'
 
     except getopt.GetoptError, err:
         print main.__doc__ % locals()
@@ -344,6 +349,9 @@ def main(argv):
         elif o in ("-m", "--comments"):
             comments = True
 
+    if outfile=='-':
+        outfile = None
+
     if comments:
         log("Generating SQL COMMENTS from SQL")
         log("================================")
@@ -354,7 +362,7 @@ def main(argv):
     try:
         # Read SQL
         log("Reading file %s ..." % infile)
-        f = open(infile)
+        f = infile and open(infile) or sys.stdin
         sql = f.read()
         f.close()
 
@@ -388,7 +396,7 @@ def main(argv):
 
         # Write SQL
         log("Writing file %s ..." % outfile)
-        f = open(outfile, "w")
+        f = outfile and open(outfile, "w") or sys.stdout
         f.write(ret)
         f.close()
 
