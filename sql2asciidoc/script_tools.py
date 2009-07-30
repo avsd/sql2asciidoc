@@ -284,16 +284,20 @@ def main(argv):
             Default: ~
         -o, --output=FILENAME
             Output file. By default - sql_filename with
-            txt extension
+            txt extension. If "-" is specified as FILENAME,
+            output is written to stdout.
         -m, --comments
             Generate SQL comments rather than asciidoc output
-        -s, --silent
-            Don't generate any output
+        -v, --verbose
+            Write detailed information to stderr.
     """
 
+    def log_error(s):
+        sys.stderr.write(s)
+        sys.stderr.write('\n')
     def log(s):
-        print(s)
-        
+        pass
+
     global TEXT_INCLS
     TEXT_INCLS = []
 
@@ -306,21 +310,21 @@ def main(argv):
     try:
         opts, args = getopt.getopt(
             argv[1:],
-            "c:a:t:r:A:V:R:o:sm",
+            "c:a:t:r:A:V:R:o:vm",
             ["title-char=",
              "table-attributes=", "table-header=", "row-pattern=",
              "view-table-attributes=", "view-header=", "view-row-pattern=",
-             "output=", "silent", "comments"])
+             "output=", "verbose", "comments"])
 
         infile = args[0]
         outfile = "%s.txt" % os.path.splitext(os.path.split(infile)[1])[0]
 
     except getopt.GetoptError, err:
-        print main_sql2asciidoc.__doc__ % locals()
+        print main.__doc__ % locals()
         print "Error: %s" % err
         return -2
     except IndexError, err:
-        print main_sql2asciidoc.__doc__ % locals()
+        print main.__doc__ % locals()
         print "Error: File not specified."
         return -2        
 
@@ -333,9 +337,8 @@ def main(argv):
                 params['title_char'] = a[1]
             else:
                 params['title_char'] = a
-        elif o in ("-s", "--silent"):
-            def log(s):
-                pass
+        elif o in ("-v", "--verbose"):
+            log = log_error
         elif o in ("-o", "--output"):
             outfile = a
         elif o in ("-m", "--comments"):
@@ -392,7 +395,7 @@ def main(argv):
         log("Done!")
         
     except Exception,err:
-        print "Error: %s" % err
+        log_error("Error: %s" % err)
         raise
 
     log("")

@@ -73,13 +73,17 @@ def main(argv):
         -c, --connection-string=CONNSTRING
             Connection string to connect to Oracle DB, mandatory.
         -o, --output=FILENAME
-            Output file, mandatory.
-        -s, --silent
-            Don't generate any output
+            Output file. If not specified, goes to standard
+            output (stdout).
+        -v, --verbose
+            Write detailed information to stderr.
     """
 
+    def log_error(s):
+        sys.stderr.write(s)
+        sys.stderr.write('\n')
     def log(s):
-        print(s)
+        pass
 
     command = os.path.split(argv[0])[1]
     params = {}
@@ -89,8 +93,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(
             argv[1:],
-            "o:c:s",
-            ["output=", "connection-string=", "silent"])
+            "o:c:v",
+            ["output=", "connection-string=", "verbose"])
 
         sql = args[0]
         connstr = None
@@ -107,9 +111,8 @@ def main(argv):
 
     
     for o, a in opts:
-        if   o in ("-s", "--silent"):
-            def log(s):
-                pass
+        if   o in ("-v", "--verbose"):
+            log = log_error
         elif o in ("-o", "--output"):
             outfile = a
         elif o in ("-c", "--connection-string"):
@@ -120,10 +123,7 @@ def main(argv):
     log("=====================================")
     
     if not connstr:
-        log("Oracle connection string not specified!")
-        return -2
-    if not outfile:
-        log("Output file not specified!")
+        log_error("Oracle connection string not specified!")
         return -2
 
     try:
@@ -136,15 +136,15 @@ def main(argv):
         ret = make_asciidoc(ctnt)
 
         # Write ASCIIDOC
-        log("Writing file %s ..." % outfile)
-        f = open(outfile, "w")
+        log("Writing file %s ..." % (outfile or 'stdout'))
+        f = outfile and open(outfile, "w") or sys.stdout
         f.write(ret)
         f.close()
 
         log("Done!")
         
     except Exception,err:
-        print "Error: %s" % err
+        log_error("Error: %s\n")
         raise
 
     log("")
