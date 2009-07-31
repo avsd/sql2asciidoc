@@ -72,6 +72,8 @@ def main(argv):
     Options:
         -c, --connection-string=CONNSTRING
             Connection string to connect to Oracle DB, mandatory.
+        -h, --help
+            Display this help message.
         -o, --output=FILENAME
             Output file. If not specified, goes to standard
             output (stdout).
@@ -96,7 +98,7 @@ def main(argv):
             "o:c:v",
             ["output=", "connection-string=", "verbose"])
 
-        sql = args[0]
+        sql = args and " ".join(args) or None
         connstr = None
         outfile = None
 
@@ -117,6 +119,9 @@ def main(argv):
             outfile = a
         elif o in ("-c", "--connection-string"):
             connstr = a
+        elif o in ("-h", "--help"):
+            print main.__doc__ % locals()
+            return 0
 
 
     log("Generating ASCIIDOC from Oracle table")
@@ -127,6 +132,11 @@ def main(argv):
         return -2
 
     try:
+        # Get SQL
+        if not sql:
+            sql = sys.stdin.read()
+            sys.stdin.close()
+        
         # Get data from Oracle
         log("Executing script: \n\t%s" % sql)
         ctnt = get_table(sql, connstr)

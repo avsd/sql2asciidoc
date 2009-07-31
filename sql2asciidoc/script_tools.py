@@ -32,43 +32,6 @@ TABLE_SEP = "|============================================================"
 TEXT_INCLS = []
 
 
-def preformat_coldesc(txt):
-    """
-    Preformats column description to represent lists
-    """
-
-    # Converting unnumbered lists directly to DocBook:
-    #
-    # The list:
-    #
-    # - one
-    # - two
-    # - three
-    #
-    # Is converted to:
-    # The list:
-    # +++<itemizedlist>
-    # <listitem><simpara> one </simpara></listitem>
-    # <listitem><simpara> two </simpara></listitem>
-    # <listitem><simpara> three </simpara></listitem>
-    # </itemizedlist>
-    #
-    # 1. The list must be preceded with a text line, 
-    #    followed by two blank lines.
-    # 2. Each list item must start with "minus" (-) without indention.
-    #    Line breaks inside list items are not allowed.
-    # 3. Two or more list items must exist.
-
-    if not txt: txt=""
-    g = re.compile("(\n\s*)((\n- [^\n]+){2,})")
-    txt = g.sub(r"\1 +++<itemizedlist> \2 </itemizedlist>+++", txt)
-
-    g = re.compile(r"(\+\+\+<itemizedlist>.*\n)- ([^\n]+)(.*</itemizedlist>\+\+\+)", re.DOTALL)
-    while(g.search(txt)):
-        txt = g.sub(r"\1 <listitem><simpara>+++ \2 +++</simpara></listitem> \3", txt)
-
-    return txt
-
 def columndict_callback(c):
     """
     Callback funciton, returning column formatting dictionary
@@ -283,6 +246,8 @@ def main(argv):
             for "Tables" or "Views" captions, second - for
             table and viewnames themselves.
             Default: ~
+        -h, --help
+            Display this help message.
         -o, --output=FILENAME
             Output file. By default - sql_filename with
             asciidoc extension. If "-" is specified as FILENAME,
@@ -315,11 +280,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(
             argv[1:],
-            "c:a:t:r:A:V:R:o:vm",
+            "c:a:t:r:A:V:R:o:vmh",
             ["title-char=",
              "table-attributes=", "table-header=", "row-pattern=",
              "view-table-attributes=", "view-header=", "view-row-pattern=",
-             "output=", "verbose", "comments"])
+             "output=", "verbose", "comments", "help"])
 
         infile = args and args[0] or None
         outfile = infile and "%s.asciidoc" % os.path.splitext(os.path.split(infile)[1])[0] or '-'
@@ -348,6 +313,9 @@ def main(argv):
             outfile = a
         elif o in ("-m", "--comments"):
             comments = True
+        elif o in ("-h", "--help"):
+            print main.__doc__ % locals()
+            return 0
 
     if outfile=='-':
         outfile = None
