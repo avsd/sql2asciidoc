@@ -31,6 +31,43 @@ TABLE_SEP = "|============================================================"
 # Text inclusions
 TEXT_INCLS = []
 
+def preformat_coldesc(txt):
+    """
+    Preformats column description to represent lists
+    """
+
+    # Converting unnumbered lists directly to DocBook:
+    #
+    # The list:
+    #
+    # - one
+    # - two
+    # - three
+    #
+    # Is converted to:
+    # The list:
+    # +++<itemizedlist>
+    # <listitem><simpara> one </simpara></listitem>
+    # <listitem><simpara> two </simpara></listitem>
+    # <listitem><simpara> three </simpara></listitem>
+    # </itemizedlist>
+    #
+    # 1. The list must be preceded with a text line, 
+    #    followed by two blank lines.
+    # 2. Each list item must start with "minus" (-) without indention.
+    #    Line breaks inside list items are not allowed.
+    # 3. Two or more list items must exist.
+
+    if not txt: txt=""
+    g = re.compile("(\n\s*)((\n- [^\n]+){2,})")
+    txt = g.sub(r"\1 +++<itemizedlist> \2 </itemizedlist>+++", txt)
+
+    g = re.compile(r"(\+\+\+<itemizedlist>.*\n)- ([^\n]+)(.*</itemizedlist>\+\+\+)", re.DOTALL)
+    while(g.search(txt)):
+        txt = g.sub(r"\1 <listitem><simpara>+++ \2 +++</simpara></listitem> \3", txt)
+
+    return txt
+
 
 def columndict_callback(c):
     """
@@ -51,7 +88,7 @@ def columndict_callback(c):
                         if c.default else '',
         'notnull'   : '' if c.nullable else ' not null',
         'desc': c.desc,
-        'descf': c.desc,        
+        'descf': preformat_coldesc(c.desc),        
     }
     
 def tables_to_asciidoc(
@@ -65,7 +102,7 @@ def tables_to_asciidoc(
         
     ret = ""
     coldesctbl_header = "|Column |Type |Description"
-    coldesctbl_attributes = '[cols="8m,5m,15a",options="header"]'
+    coldesctbl_attributes = '[cols="8m,5m,15",options="header"]'
     
     # Parse tables
     tbs = parse_tables(sql)
@@ -110,7 +147,7 @@ def views_to_asciidoc(
     global TEXT_INCLS
         
     ret = ""
-    coldesctbl_attributes = '[cols="8m,8m,12a",options="header"]'
+    coldesctbl_attributes = '[cols="8m,8m,12",options="header"]'
     coldesctbl_header = "|Alias |Value |Description"
         
     # Parse tables
@@ -290,12 +327,12 @@ def main(argv):
         outfile = infile and "%s.asciidoc" % os.path.splitext(os.path.split(infile)[1])[0] or '-'
 
     except getopt.GetoptError, err:
-        print main.__doc__ % locals()
-        print "Error: %s" % err
+        log_error(main.__doc__ % locals())
+        log_error("Error: %s" % err)
         return -2
     except IndexError, err:
-        print main.__doc__ % locals()
-        print "Error: File not specified."
+        log_error(main.__doc__ % locals())
+        log_error("Error: File not specified.")
         return -2        
 
     
@@ -347,12 +384,12 @@ def main(argv):
             ret += tables_to_asciidoc(sql, **params)
 
             if cpt_char:
-
-                ret += "\n\n%s\n%s\n" % (VIEWS_CPT, cpt_char*len(VIEWS_CPT))
-                
                 # Parse Views from SQL
+                vws = views_to_asciidoc(sql, **params)
                 log("Parsing Views...")
-                ret += views_to_asciidoc(sql, **params)
+                if vws.strip():
+                    ret += "\n\n%s\n%s\n" % (VIEWS_CPT, cpt_char*len(VIEWS_CPT))
+                    ret += vws
                 
 
             # Making title references
