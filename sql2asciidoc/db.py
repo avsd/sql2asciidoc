@@ -20,11 +20,11 @@ RX_TABLE = r"\bCREATE\s+TABLE\s+" \
            r"\)" \
            r"\s*(;|tablespace .*?;)"
 
-RX_COLUMN = "(?P<colname>([\\w\\$]+|\"[\\w\\$]+\"))\\s+" \
-               r"(?P<coltype>[\w ]+[\(\)\d]*)\s*" \
-               r"(\s+default\s+(?P<default>\S+))?\s*" \
-               r"(?P<notnull>not null)?\s*" \
-               r"(\s+enable)?\s*" \
+RX_COLUMN = r'(?P<colname>([\w\$]+|"[\w\$ ]+"))\s+' \
+               r'(?P<coltype>(\w+|"[^"]+")\s*[\(\)\d]*)\s*' \
+               r"(\bdefault\s+(?P<default>\S+))?\s*" \
+               r"(?P<notnull>\bnot null)?\s*" \
+               r"(\benable)?\s*" \
                r"(?:\Z|,)"
 
 
