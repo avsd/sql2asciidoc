@@ -15,7 +15,7 @@ RXX_TABLENAME = \
 
 RX_TABLE = r"\bCREATE\s+TABLE\s+" \
            + RXX_TABLENAME + \
-           r"\s+\(" \
+           r"\s*\(" \
            r"(?P<columns>.*?)" \
            r"\)" \
            r"\s*(;|tablespace .*?;)"
