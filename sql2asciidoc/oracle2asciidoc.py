@@ -16,22 +16,27 @@ to be installed on the workstation
 
 import sys, os, getopt
 
-###########################################
-# cx_Oracle module is needed for specified
-# version of Oracle (9,10 or 11).
-# It could be downloaded from SourceForge:
-#
-#   http://cx-oracle.sourceforge.net/
-#
-# For more help see:
-#   http://www.orafaq.com/wiki/Python
-###########################################
-import cx_Oracle
-
 def get_table(sql, connstr):
     """
     Retrieves data from table and returns it as list
     """
+
+    ###########################################
+    # cx_Oracle module is needed for specified
+    # version of Oracle (9,10 or 11).
+    # It could be downloaded from SourceForge:
+    #
+    #   http://cx-oracle.sourceforge.net/
+    #
+    # For more help see:
+    #   http://www.orafaq.com/wiki/Python
+    ###########################################
+    try:
+        import cx_Oracle
+    except:
+        raise ImportError("""Required cx_Oracle module not found.
+The module could be obtained from here: http://cx-oracle.sourceforge.net/
+See also: http://www.orafaq.com/wiki/Python""")
 
     connection = cx_Oracle.connect(connstr)
     cursor = connection.cursor()
