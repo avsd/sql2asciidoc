@@ -14,9 +14,9 @@ Requires Python 2.6 and cx_Oracle
 to be installed on the workstation
 """
 
-import sys, os, getopt
+import sys, os, getopt, codecs
 
-def get_table(sql, connstr):
+def get_table(sql, connstr, nls_lang=None):
     """
     Retrieves data from table and returns it as list
     """
@@ -38,6 +38,11 @@ def get_table(sql, connstr):
 The module could be obtained from here: http://cx-oracle.sourceforge.net/
 See also: http://www.orafaq.com/wiki/Python""")
 
+    # if NLS_LANG is defined, set it to environment variable
+    if nls_lang:
+        import os
+        os.environ["NLS_LANG"] = nls_lang
+
     connection = cx_Oracle.connect(connstr)
     cursor = connection.cursor()
     cursor.execute(sql)
@@ -47,6 +52,17 @@ See also: http://www.orafaq.com/wiki/Python""")
     cursor.close()
     connection.close()
 
+    if nls_lang:
+        try:
+            enc = nls_lang.split('.')[-1]
+            ret2 = [tuple(
+                            [isinstance(b,basestring) and unicode(b,enc) or b
+                             for b in a]
+                         )for a in ret]
+        except LookupError:
+            return ret
+        ret = ret2
+        
     return ret
     
 def make_asciidoc(dct):
@@ -79,6 +95,8 @@ def main(argv):
             Connection string to connect to Oracle DB, mandatory.
         -h, --help
             Display this help message.
+        -n, --nls
+            NLS language definition (for example, "AMERICAN_AMERICA.UTF8")
         -o, --output=FILENAME
             Output file. If not specified, goes to standard
             output (stdout).
@@ -100,12 +118,13 @@ def main(argv):
     try:
         opts, args = getopt.getopt(
             argv[1:],
-            "o:c:v",
-            ["output=", "connection-string=", "verbose"])
+            "n:o:c:vh",
+            ["output=", "connection-string=", "verbose", "help", "nls="])
 
         sql = args and " ".join(args) or None
         connstr = None
         outfile = None
+        nls = None
 
     except getopt.GetoptError, err:
         print main.__doc__ % locals()
@@ -122,6 +141,8 @@ def main(argv):
             log = log_error
         elif o in ("-o", "--output"):
             outfile = a
+        elif o in ("-n", "--nls"):
+            nls = a
         elif o in ("-c", "--connection-string"):
             connstr = a
         elif o in ("-h", "--help"):
@@ -144,7 +165,7 @@ def main(argv):
         
         # Get data from Oracle
         log("Executing script: \n\t%s" % sql)
-        ctnt = get_table(sql, connstr)
+        ctnt = get_table(sql, connstr, nls)
 
         # Generate
         log("Generating ASCIIDOC...")
@@ -153,7 +174,7 @@ def main(argv):
         # Write ASCIIDOC
         log("Writing file %s ..." % (outfile or 'stdout'))
         f = outfile and open(outfile, "w") or sys.stdout
-        f.write(ret)
+        f.write(codecs.encode(ret,"utf8"))
         f.close()
 
         log("Done!")

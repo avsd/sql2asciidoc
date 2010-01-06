@@ -12,7 +12,7 @@ The software is released under Modified BSD license
 from distutils.core import setup
 
 setup(name='sql2asciidoc',
-      version='0.1.1',
+      version='0.1.2',
       description='Tools for SQL DDL (table creation) and DML (SELECT commands output) to AsciiDoc source',
       author='David Avsajanishvili',
       author_email='avsd05@gmail.com',
