@@ -23,7 +23,8 @@ RX_TABLE = r"\bCREATE\s+TABLE\s+" \
 RX_COLUMN = r'(?P<colname>([\w\$]+|"[\w\$ ]+"))\s+' \
                r'(?P<coltype>(\w+|"[^"]+")\s*[\(\)\d]*)\s*' \
                r"(\bdefault\s+(?P<default>\S+))?\s*" \
-               r"(?P<notnull>\bnot null)?\s*" \
+               r"(?P<primarykey>\bprimary\s+key)?\s*" \
+               r"(?P<notnull>\bnot\s+null)?\s*" \
                r"(\benable)?\s*" \
                r"(?:\Z|,)"
 
