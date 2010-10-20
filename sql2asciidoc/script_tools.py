@@ -90,6 +90,38 @@ def columndict_callback(c):
         'desc': c.desc,
         'descf': preformat_coldesc(c.desc),        
     }
+
+def grants_to_asciidoc(obj):
+    """
+    Converts grants/revokes for specified object (table/view) to AsciiDoc format
+    """
+
+    if not obj.permits:
+        return u''
+
+    coldesctbl_attributes = '[cols="8m,%d*^3m",options="header",width="70%%"]' % len(PERMITS_LIST)
+    coldesctbl_header = "|User or Role " + ' '.join(['|%s' % k for k in PERMITS_LIST])
+        
+    # Some globals to locals
+    table_sep = TABLE_SEP
+
+    grt_rows = []
+    for k,v in obj.permits.iteritems():
+        s = '|**%s**' % k
+        for p in PERMITS_LIST:
+            s += '|%s' % {True:'GRANT',False:'REVOKE',None:''}[v[p]]
+        grt_rows.append(s)
+    grt_rows = '\n'.join(grt_rows)
+
+    return """
+.Privileges
+%(coldesctbl_attributes)s
+%(table_sep)s
+%(coldesctbl_header)s
+%(grt_rows)s
+%(table_sep)s
+""" % locals()
+            
     
 def tables_to_asciidoc(
         sql,
@@ -117,6 +149,7 @@ def tables_to_asciidoc(
         ttl = title_char * len(tnm)
         dsc = t.desc
         cols = t.render_cols("|%(name)s  |%(type)s|%(descf)s%(defaultf)s\n", columndict_callback)
+        grants = grants_to_asciidoc(t)
 
         ret += """
 %(tnm)s
@@ -131,6 +164,7 @@ def tables_to_asciidoc(
 %(cols)s
 %(table_sep)s
 
+%(grants)s
 """ % locals()
 
     return ret
@@ -163,6 +197,7 @@ def views_to_asciidoc(
         ttl = title_char * len(tnm)
         dsc = t.desc
         cols = t.render_cols("|%(name)s  |+++%(value)s+++|%(descf)s\n", columndict_callback)
+        grants = grants_to_asciidoc(t)
 
         ret += """
 %(tnm)s
@@ -221,6 +256,9 @@ is shown below:
 INCLUSION_%d
 ------------------------------------------------------------
 """ % (len(TEXT_INCLS) - 1)
+
+        if grants:
+            ret += "\n\n%s\n\n" % grants
 
     return ret
 
